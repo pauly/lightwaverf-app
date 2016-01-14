@@ -1,51 +1,30 @@
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
-<script src="https://www.google.com/jsapi"></script>
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 <script>
   var gauge, gauge_data, gauge_options;
-  google.load( 'visualization', '1.0', { packages: [ 'corechart', 'gauge', 'annotatedtimeline' ] } );
-  google.setOnLoadCallback( function ( ) {
-    var energy_data = new google.visualization.DataTable( );
-    energy_data.addColumn( 'date', 'Date' );
-    energy_data.addColumn( 'number', 'Electricity used' );
-    energy_data.addColumn( 'string', 'title1' );
-    energy_data.addColumn( 'string', 'text1' );
-    if ( ! Array.prototype.map ) { // polyfill
-      Array.prototype.map = function( callback, thisArg ) {
-        var T, A, k;
-        if ( this == null ) throw new TypeError( 'this is null or not defined' );
-        var O = Object(this);
-        var len = O.length >>> 0;
-        if ( typeof callback !== 'function' ) throw new TypeError( callback + ' is not a function' );
-        if ( thisArg ) T = thisArg;
-        A = new Array( len );
-        k = 0;
-        while ( k < len ) {
-          var kValue, mappedValue;
-          if ( k in O ) {
-            kValue = O[ k ];
-            mappedValue = callback.call(T, kValue, k, O);
-            A[ k ] = mappedValue;
-          }
-          k ++;
-        }
-        return A;
-      };      
-    }
+  google.charts.load('current', { packages: ['annotationchart'] });
+  google.charts.setOnLoadCallback(function() {
+    var energy_data = new google.visualization.DataTable();
+    energy_data.addColumn('date', 'Date');
+    energy_data.addColumn('number', 'Electricity used');
+    energy_data.addColumn('string', 'title1');
+    energy_data.addColumn('string', 'text1');
     var rawData = <%- summary %>;
     // var startDate = rawData[0][0];
     var i = 0;
-    energy_data.addRows( rawData.map( function ( e ) {
+    energy_data.addRows(rawData.map(function(e) {
       ++ i;
       // if ( e[0] !== startDate ) e[0] += startDate;
       e[0] = new Date( e[0] * 1000 ); // as it is now a timestamp
-      e[1] = e[1] * 10;
+      // e[1] = e[1] * 10;
       e[2] = e[2] || '';
       e[3] = e[3] || '';
       return e;
-    } ));
-    var chart = new google.visualization.AnnotatedTimeLine( document.getElementById( 'energy_chart' ));
-    chart.draw( energy_data, { displayAnnotations: true, title: '24 hours electricity usage' } );
-    gauge = new google.visualization.Gauge( document.getElementById( 'gauge_div' ));
+    }));
+    var chart = new google.visualization.AnnotationChart(document.getElementById('energy_chart'));
+    var d = new Date();
+    d.setDate(d.getDate() - 1);
+    chart.draw(energy_data, { zoomStartTime: d, displayAnnotations: true, title: 'Electricity usage' });
+    gauge = new google.visualization.Gauge(document.getElementById('gauge_div'));
     gauge_data = google.visualization.arrayToDataTable( [[ 'Label', 'Value' ], [ 'Electric', rawData.pop[ 1 ]]] );
     gauge_options = {
       width: '200',
@@ -57,9 +36,9 @@
       minorTicks: 5
     };
     gauge.draw( gauge_data, gauge_options );
-  } );
-  $( function ( ) {
-    var key = ''; // @todo prompt for an pi key and save it in local storage like https://github.com/pauly/robot-butler does
+  });
+  window.$ && $( function ( ) {
+    var key = ''; // @todo prompt for an api key and save it in local storage like https://github.com/pauly/robot-butler does
     $('dt a').click( function ( ) {
       $(this).parent( ).next('dd').slideDown( );
       return false;
